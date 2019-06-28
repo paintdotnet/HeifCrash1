@@ -66,7 +66,6 @@ int wmain(int argc, wchar_t** argv)
     if (argc != 3)
     {
         cout << "arg1 is the input filename (any type), and arg2 is the output filename (using HEIF/HEIC)" << endl;
-        cout << "NOTE: output file must not exist!!!" << endl;
         return 1;
     }
 
@@ -107,6 +106,12 @@ int wmain(int argc, wchar_t** argv)
         0,
         &spFrame0Decode));
 
+    if (SUCCEEDED(hr))
+    {
+        DeleteFileW(szOutputFileName);
+        // don't care if it fails -- could mean the file doesn't exist yet, which is fine
+    }
+
     CComPtr<IWICStream> spOutputStream;
     IFS(hr, spFactory->CreateStream(&spOutputStream));
 
@@ -132,7 +137,6 @@ int wmain(int argc, wchar_t** argv)
 
     CComBSTR bstrOptionName = SysAllocString(L"ImageQuality");    
 
-    // Using a quality of 0.95 causes a crash. Using 0.94 or below (I tested as far down as 0.50) works fine.
     if (SUCCEEDED(hr))
     {
         PROPBAG2 option = { 0 };
@@ -141,7 +145,9 @@ int wmain(int argc, wchar_t** argv)
         VARIANT varValue;
         VariantInit(&varValue);
         varValue.vt = VT_R4;
-        varValue.fltVal = 0.94f;
+
+        // Using a quality of 0.95 causes a crash. Using 0.94 or below (I tested as far down as 0.50) works fine.
+        varValue.fltVal = 0.95f;
 
         IFS(hr, spFrameOptions->Write(
             1,
